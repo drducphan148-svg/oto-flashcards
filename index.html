@@ -863,6 +863,38 @@
       showCard();
     }
 
+    /**
+     * Start a study session with a specific set of cards (e.g. search results).
+     * The clickedCard (if provided) will be placed first, then the rest shuffled.
+     */
+    function startCardListSession(cards, clickedCard) {
+      if (!cards || cards.length === 0) {
+        showToast('No cards to study.');
+        return;
+      }
+
+      let sessionCards;
+      if (clickedCard) {
+        // Put the clicked card first, shuffle the rest
+        const rest = cards.filter(c => c !== clickedCard);
+        sessionCards = [clickedCard, ...shuffleArray(rest)];
+      } else {
+        sessionCards = shuffleArray([...cards]);
+      }
+
+      currentSession = {
+        cards: sessionCards,
+        index: 0,
+        chapterId: null,
+        results: [],
+        isComplete: false,
+        showingAnswer: false,
+      };
+
+      switchScreen('study');
+      showCard();
+    }
+
     function showCard() {
       const session = currentSession;
       if (session.index >= session.cards.length) {
@@ -986,18 +1018,36 @@
         return;
       }
 
-      // Show results grouped by chapter
+      // Show search results — clicking any result studys ALL results with that card first
       const grouped = {};
       results.forEach(r => {
         if (!grouped[r.chapterId]) grouped[r.chapterId] = [];
         grouped[r.chapterId].push(r);
       });
 
+      // "Study all search results" button at top
+      if (results.length > 0) {
+        const studyAllBtn = document.createElement('div');
+        studyAllBtn.className = 'chapter-card';
+        studyAllBtn.style.cssText = 'background:var(--primary);color:white;border-color:var(--primary);margin-bottom:8px;';
+        studyAllBtn.innerHTML = `
+          <div class="info">
+            <div class="title" style="color:white;">📚 Study All ${results.length} Results</div>
+            <div class="subtitle" style="color:rgba(255,255,255,0.7);">Tap to start reviewing</div>
+          </div>
+          <span class="badge" style="background:rgba(255,255,255,0.2);color:white;">${results.length} cards</span>
+        `;
+        studyAllBtn.addEventListener('click', () => {
+          startCardListSession(results, null);
+        });
+        grid.appendChild(studyAllBtn);
+      }
+
       Object.keys(grouped).forEach(chId => {
         const ch = FLASHCARD_DATA.chapters.find(c => c.id === parseInt(chId));
         if (!ch) return;
         const title = document.createElement('div');
-        title.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-2);padding:8px 4px;';
+        title.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-2);padding:8px 4px 4px;';
         title.textContent = `${ch.id}. ${ch.title} (${grouped[chId].length} matches)`;
         grid.appendChild(title);
 
@@ -1011,15 +1061,19 @@
             </div>
           `;
           card.addEventListener('click', () => {
-            startChapterStudy(q.chapterId);
+            // Study this specific card first, then the rest of the search results
+            startCardListSession(results, q);
           });
           grid.appendChild(card);
         });
 
         if (grouped[chId].length > 5) {
           const more = document.createElement('div');
-          more.style.cssText = 'font-size:12px;color:var(--text-2);padding:4px 4px 12px;';
-          more.textContent = `+${grouped[chId].length - 5} more matches`;
+          more.style.cssText = 'font-size:12px;color:var(--text-2);padding:4px 4px 12px;cursor:pointer;';
+          more.textContent = `+${grouped[chId].length - 5} more matches — tap to study all`;
+          more.addEventListener('click', () => {
+            startCardListSession(grouped[chId], null);
+          });
           grid.appendChild(more);
         }
       });

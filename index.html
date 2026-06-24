@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OTO Flashcards">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="description" content="Otolaryngology Board Review Flashcards with Spaced Repetition">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%231a1a2e'/%3E%3Ctext x='96' y='140' font-size='120' text-anchor='middle' fill='%23fff' font-family='serif'%3E📖%3C/text%3E%3C/svg%3E">
+  <title>OTO Flashcards</title>
+  <style>
+    /* ===== CSS Variables ===== */
+    :root {
+      --bg: #f0f2f5;
+      --surface: #ffffff;
+      --surface-2: #f8f9fa;
+      --text: #1a1a2e;
+      --text-2: #555;
+      --text-3: #999;
+      --primary: #4361ee;
+      --primary-hover: #3451d1;
+      --primary-light: #eef0ff;
+      --success: #2ec4b6;
+      --warning: #ff9f1c;
+      --danger: #e71d36;
+      --border: #e0e0e0;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-xs: 6px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .dark-mode {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface-2: #222240;
+      --text: #e8e8f0;
+      --text-2: #aaa;
+      --text-3: #666;
+      --primary: #5e7ce2;
+      --primary-hover: #6d8aff;
+      --primary-light: #1e1e3a;
+      --border: #2a2a4a;
+      --shadow: 0 2px 12px rgba(0,0,0,0.3);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background var(--transition), color var(--transition);
+    }
+    button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+    input, select { font-family: inherit; outline: none; }
+
+    /* ===== App Shell ===== */
+    .app-header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: background var(--transition);
+    }
+    .app-header h1 {
+      font-size: 18px; font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .app-header h1 span { font-weight: 400; font-size: 13px; -webkit-text-fill-color: var(--text-2); }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--surface-2); color: var(--text);
+      font-size: 18px; display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition);
+    }
+    .icon-btn:active { transform: scale(0.92); }
+    .icon-btn:hover { background: var(--border); }
+
+    /* ===== Screens ===== */
+    .screen { display: none; padding: 16px; max-width: 720px; margin: 0 auto; }
+    .screen.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ===== Home Screen ===== */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--surface); border-radius: var(--radius-sm); padding: 14px;
+      text-align: center; box-shadow: var(--shadow); border: 1px solid var(--border);
+      transition: background var(--transition), border var(--transition);
+    }
+    .stat-card .value { font-size: 24px; font-weight: 700; color: var(--primary); }
+    .stat-card .label { font-size: 11px; color: var(--text-2); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .chapter-grid { display: grid; gap: 10px; margin-bottom: 24px; }
+    .chapter-card {
+      background: var(--surface); border-radius: var(--radius-sm); padding: 16px;
+      border: 1px solid var(--border); box-shadow: var(--shadow);
+      display: flex; justify-content: space-between; align-items: center;
+      transition: all var(--transition); cursor: pointer;
+    }
+    .chapter-card:active { transform: scale(0.98); }
+    .chapter-card .info { flex: 1; min-width: 0; }
+    .chapter-card .title { font-size: 15px; font-weight: 600; }
+    .chapter-card .subtitle { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+    .chapter-card .badge {
+      background: var(--primary-light); color: var(--primary);
+      padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      white-space: nowrap; margin-left: 8px;
+    }
+    .chapter-card .badge.due { background: #fff3e0; color: #e65100; }
+    .chapter-card .badge.done { background: #e8f5e9; color: #2e7d32; }
+    .dark-mode .chapter-card .badge.due { background: #3a2000; color: #ffb74d; }
+    .dark-mode .chapter-card .badge.done { background: #1a3a1a; color: #81c784; }
+
+    .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .quick-btn {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 14px; text-align: center; font-size: 14px; font-weight: 600; color: var(--text);
+      box-shadow: var(--shadow); transition: all var(--transition);
+    }
+    .quick-btn:active { transform: scale(0.97); }
+    .quick-btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .quick-btn .emoji { font-size: 22px; display: block; margin-bottom: 4px; }
+
+    /* ===== Study Screen ===== */
+    .study-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; font-size: 13px; color: var(--text-2);
+    }
+    .study-header .progress-text { font-weight: 600; }
+    .progress-bar {
+      height: 4px; background: var(--border); border-radius: 4px; margin-bottom: 20px; overflow: hidden;
+    }
+    .progress-bar .fill {
+      height: 100%; background: linear-gradient(90deg, var(--primary), #7c3aed);
+      border-radius: 4px; transition: width 0.5s ease;
+    }
+
+    .flashcard {
+      background: var(--surface); border-radius: var(--radius);
+      border: 1px solid var(--border); box-shadow: var(--shadow-lg);
+      min-height: 320px; display: flex; flex-direction: column;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: background var(--transition);
+      margin-bottom: 12px;
+    }
+    .flashcard-inner {
+      flex: 1; padding: 24px 20px; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; text-align: center;
+      min-height: 280px;
+    }
+    .flashcard .card-label {
+      position: absolute; top: 12px; left: 16px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+      padding: 3px 10px; border-radius: 20px; background: var(--primary-light); color: var(--primary);
+    }
+    .flashcard .tap-hint {
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+      font-size: 12px; color: var(--text-3);
+    }
+    .flashcard .question-text {
+      font-size: 18px; line-height: 1.6; font-weight: 500;
+      max-width: 600px;
+    }
+    .flashcard .answer-text {
+      font-size: 16px; line-height: 1.7; color: var(--text);
+      max-width: 600px;
+    }
+    .flashcard .answer-text ul, .flashcard .answer-text ol {
+      text-align: left; margin: 8px 0; padding-left: 24px;
+    }
+    .flashcard .answer-text li { margin: 4px 0; }
+
+    .rating-buttons {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px;
+    }
+    .rating-btn {
+      padding: 14px 8px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+      transition: all var(--transition); text-align: center;
+    }
+    .rating-btn:active { transform: scale(0.95); }
+    .rating-btn.r0 { background: #ffebee; color: #c62828; }
+    .rating-btn.r1 { background: #fff3e0; color: #e65100; }
+    .rating-btn.r2 { background: #e8f5e9; color: #2e7d32; }
+    .rating-btn.r3 { background: #e0f7fa; color: #00695c; }
+    .dark-mode .rating-btn.r0 { background: #3a1111; color: #ef9a9a; }
+    .dark-mode .rating-btn.r1 { background: #3a2000; color: #ffcc80; }
+    .dark-mode .rating-btn.r2 { background: #1a3a1a; color: #a5d6a7; }
+    .dark-mode .rating-btn.r3 { background: #002a30; color: #80deea; }
+
+    .rating-labels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+    .rating-labels span { text-align: center; font-size: 11px; color: var(--text-2); }
+
+    /* ===== Review Stats ===== */
+    .review-summary {
+      background: var(--surface); border-radius: var(--radius);
+      padding: 20px; border: 1px solid var(--border); margin-bottom: 16px;
+      box-shadow: var(--shadow); text-align: center;
+    }
+    .review-summary .emoji { font-size: 48px; margin-bottom: 8px; }
+    .review-summary .title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .review-summary .subtitle { font-size: 14px; color: var(--text-2); margin-bottom: 16px; }
+    .review-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .review-stats-grid .item { padding: 10px; border-radius: var(--radius-xs); background: var(--surface-2); }
+    .review-stats-grid .item .num { font-size: 22px; font-weight: 700; }
+    .review-stats-grid .item .lbl { font-size: 11px; color: var(--text-2); }
+
+    /* ===== Stats Screen ===== */
+    .stats-screen { padding-bottom: 100px; }
+    .stats-chart { margin-bottom: 20px; }
+    .stats-chart h3 { font-size: 14px; color: var(--text-2); margin-bottom: 12px; font-weight: 600; }
+    .stat-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-row .stat-label { color: var(--text-2); }
+    .stat-row .stat-value { font-weight: 600; }
+
+    .chapter-progress-list { margin-top: 12px; }
+    .chapter-progress-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .chapter-progress-item:last-child { border-bottom: none; }
+    .chapter-progress-item .cp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chapter-progress-item .cp-bar {
+      flex: 0 0 100px; height: 6px; background: var(--border); border-radius: 6px; margin: 0 12px; overflow: hidden;
+    }
+    .chapter-progress-item .cp-bar .fill { height: 100%; background: var(--primary); border-radius: 6px; }
+    .chapter-progress-item .cp-pct { font-weight: 600; font-size: 12px; color: var(--text-2); min-width: 36px; text-align: right; }
+
+    /* ===== Settings ===== */
+    .settings-group { margin-bottom: 20px; }
+    .settings-group h3 { font-size: 12px; color: var(--text-2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .settings-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row .left .title { font-size: 15px; font-weight: 500; }
+    .settings-row .left .desc { font-size: 12px; color: var(--text-2); }
+
+    /* Toggle Switch */
+    .toggle { position: relative; width: 48px; height: 28px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle .slider {
+      position: absolute; inset: 0; background: var(--border); border-radius: 28px; transition: var(--transition);
+    }
+    .toggle .slider::before {
+      content: ''; position: absolute; height: 22px; width: 22px; left: 3px; bottom: 3px;
+      background: white; border-radius: 50%; transition: var(--transition);
+    }
+    .toggle input:checked + .slider { background: var(--primary); }
+    .toggle input:checked + .slider::before { transform: translateX(20px); }
+
+    .danger-btn {
+      background: transparent; color: var(--danger); border: 1px solid var(--danger);
+      padding: 10px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+      width: 100%; transition: all var(--transition);
+    }
+    .danger-btn:active { background: var(--danger); color: white; }
+
+    /* ===== Bottom Tab Bar ===== */
+    .tab-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: var(--surface); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; padding: 6px 0;
+      padding-bottom: max(6px, env(safe-area-inset-bottom));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .tab-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 6px; font-size: 10px; color: var(--text-3); background: none;
+      transition: all var(--transition); border-radius: 8px;
+    }
+    .tab-btn .tab-icon { font-size: 22px; margin-bottom: 1px; }
+    .tab-btn.active { color: var(--primary); }
+    .tab-btn.active .tab-icon { transform: scale(1.05); }
+
+    /* ===== Common ===== */
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: var(--text-2);
+    }
+    .empty-state .emoji { font-size: 56px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; line-height: 1.6; }
+
+    .toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: var(--text); color: var(--bg); padding: 10px 24px;
+      border-radius: 24px; font-size: 14px; font-weight: 500;
+      box-shadow: var(--shadow-lg); z-index: 999;
+      animation: toastIn 0.3s ease forwards;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+    /* ===== Search ===== */
+    .search-box {
+      width: 100%; padding: 12px 16px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); font-size: 15px; margin-bottom: 16px;
+      transition: border var(--transition);
+    }
+    .search-box:focus { border-color: var(--primary); }
+    .search-box::placeholder { color: var(--text-3); }
+
+    /* ===== Responsive ===== */
+    @media (min-width: 720px) {
+      .screen { padding: 24px; }
+      .flashcard { min-height: 380px; }
+      .flashcard-inner { min-height: 340px; padding: 32px; }
+      .flashcard .question-text { font-size: 22px; }
+      .flashcard .answer-text { font-size: 18px; }
+      .chapter-grid { grid-template-columns: repeat(2, 1fr); }
+      .chapter-card { flex-direction: column; align-items: flex-start; gap: 6px; }
+      .chapter-card .badge { margin-left: 0; }
+      .stats-bar { gap: 12px; }
+      .stat-card .value { font-size: 28px; }
+    }
+
+    /* ===== Shake animation for wrong ===== */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .shake { animation: shake 0.3s ease; }
+
+    /* ===== Print ===== */
+    @media print {
+      .app-header, .tab-bar, .rating-buttons, .rating-labels, .tap-hint, .icon-btn { display: none; }
+      .screen { padding: 0; }
+      .flashcard { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="app-header">
+    <h1>OTO Flashcards <span>Board Review</span></h1>
+    <div class="header-actions">
+      <button class="icon-btn" id="searchToggle" aria-label="Search">🔍</button>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <!-- ===== HOME SCREEN ===== -->
+  <div class="screen active" id="screen-home">
+    <div class="stats-bar" id="homeStats">
+      <div class="stat-card"><div class="value" id="statTotal">0</div><div class="label">Total Cards</div></div>
+      <div class="stat-card"><div class="value" id="statStudied">0</div><div class="label">Studied</div></div>
+      <div class="stat-card"><div class="value" id="statDue">0</div><div class="label">Due Now</div></div>
+    </div>
+
+    <div class="quick-actions">
+      <button class="quick-btn primary" id="studyAllBtn"><span class="emoji">📚</span> Study All Due</button>
+      <button class="quick-btn" id="studyNewBtn"><span class="emoji">🆕</span> New Cards</button>
+    </div>
+
+    <input type="text" class="search-box" id="searchInput" placeholder="Search flashcards...">
+
+    <div class="chapter-grid" id="chapterGrid"></div>
+  </div>
+
+  <!-- ===== STUDY SCREEN ===== -->
+  <div class="screen" id="screen-study">
+    <div class="study-header">
+      <span id="studyChapterTitle">Loading...</span>
+      <span class="progress-text" id="studyProgress">0 / 0</span>
+    </div>
+    <div class="progress-bar"><div class="fill" id="studyProgressFill" style="width:0%"></div></div>
+
+    <div class="flashcard" id="flashcard">
+      <div class="card-label" id="cardLabel">Question</div>
+      <div class="flashcard-inner" id="cardInner">
+        <div class="question-text" id="questionText">Tap to see question</div>
+        <div class="answer-text" id="answerText" style="display:none;"></div>
+      </div>
+      <div class="tap-hint" id="tapHint">Tap card to reveal answer</div>
+    </div>
+
+    <div id="ratingArea" style="display:none;">
+      <div class="rating-buttons" id="ratingButtons">
+        <button class="rating-btn r0" data-rating="0">😵 Again</button>
+        <button class="rating-btn r1" data-rating="1">🤔 Hard</button>
+        <button class="rating-btn r2" data-rating="2">✅ Good</button>
+        <button class="rating-btn r3" data-rating="3">⭐ Easy</button>
+      </div>
+      <div class="rating-labels">
+        <span>Forgot</span><span>Difficult</span><span>Correct</span><span>Perfect</span>
+      </div>
+    </div>
+
+    <!-- Review Complete -->
+    <div id="reviewComplete" style="display:none;">
+      <div class="review-summary">
+        <div class="emoji">🎉</div>
+        <div class="title">Session Complete!</div>
+        <div class="subtitle" id="sessionSummary">Great job!</div>
+        <div class="review-stats-grid">
+          <div class="item"><div class="num" id="sessionAgain">0</div><div class="lbl">Again</div></div>
+          <div class="item"><div class="num" id="sessionHard">0</div><div class="lbl">Hard</div></div>
+          <div class="item"><div class="num" id="sessionGood">0</div><div class="lbl">Good</div></div>
+          <div class="item"><div class="num" id="sessionEasy">0</div><div class="lbl">Easy</div></div>
+          <div class="item"><div class="num" id="sessionTotal">0</div><div class="lbl">Total</div></div>
+          <div class="item"><div class="num" id="sessionPct">0%</div><div class="lbl">Recall</div></div>
+        </div>
+        <br>
+        <button class="quick-btn primary" id="continueBtn" style="width:100%;">Continue Studying</button>
+        <br><br>
+        <button class="quick-btn" id="doneBtn" style="width:100%;">Back to Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STATS SCREEN ===== -->
+  <div class="screen stats-screen" id="screen-stats">
+    <div class="stats-chart">
+      <h3>📊 Overview</h3>
+      <div class="stat-row"><span class="stat-label">Total Cards</span><span class="stat-value" id="sTotal">0</span></div>
+      <div class="stat-row"><span class="stat-label">Cards Studied</span><span class="stat-value" id="sStudied">0</span></div>
+      <div class="stat-row"><span class="stat-label">New Cards</span><span class="stat-value" id="sNew">0</span></div>
+      <div class="stat-row"><span class="stat-label">Due for Review</span><span class="stat-value" id="sDue">0</span></div>
+      <div class="stat-row"><span class="stat-label">Mature Cards</span><span class="stat-value" id="sMature">0</span></div>
+      <div class="stat-row"><span class="stat-label">Average Ease</span><span class="stat-value" id="sEase">0%</span></div>
+    </div>
+
+    <div class="stats-chart">
+      <h3>📈 Chapter Progress</h3>
+      <div class="chapter-progress-list" id="chapterProgressList"></div>
+    </div>
+
+    <div class="stats-chart">
+      <h3>⚙️ Settings</h3>
+      <div class="settings-row">
+        <div class="left"><div class="title">New cards per day</div><div class="desc">Cards to introduce daily</div></div>
+        <select id="newCardsPerDay" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);">
+          <option value="5">5</option><option value="10">10</option><option value="15">15</option>
+          <option value="20">20</option><option value="25">25</option><option value="30" selected>30</option>
+          <option value="50">50</option><option value="999">∞</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <div class="left"><div class="title">Reviews per day</div><div class="desc">Max review cards daily</div></div>
+        <select id="reviewsPerDay" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);">
+          <option value="20">20</option><option value="50">50</option><option value="100">100</option>
+          <option value="150" selected>150</option><option value="200">200</option><option value="999">∞</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <div class="left"><div class="title">Dark Mode</div></div>
+        <label class="toggle"><input type="checkbox" id="darkModeToggle"><span class="slider"></span></label>
+      </div>
+      <div class="settings-row">
+        <div class="left"><div class="title">Reset All Progress</div><div class="desc">Erase all study data</div></div>
+      </div>
+      <button class="danger-btn" id="resetProgress">🗑️ Reset All Progress</button>
+    </div>
+  </div>
+
+  <!-- ===== TAB BAR ===== -->
+  <nav class="tab-bar" id="tabBar">
+    <button class="tab-btn active" data-tab="home"><span class="tab-icon">🏠</span> Home</button>
+    <button class="tab-btn" data-tab="study"><span class="tab-icon">📖</span> Study</button>
+    <button class="tab-btn" data-tab="stats"><span class="tab-icon">📊</span> Stats</button>
+  </nav>
+
+  <script src="data.js"></script>
+  <script>
+    // ============================================================
+    // SM-2 SPACED REPETITION ALGORITHM
+    // ============================================================
+    class SM2 {
+      static getDefaultCard() {
+        return {
+          ease: 2.5,
+          interval: 0,
+          repetitions: 0,
+          dueDate: Date.now(),
+          lastReview: null,
+          lapses: 0,
+        };
+      }
+
+      static schedule(card, quality) {
+        // quality: 0=again, 1=hard, 2=good, 3=easy
+        if (quality < 0 || quality > 3) return card;
+
+        const newCard = { ...card };
+        newCard.lastReview = Date.now();
+
+        if (quality < 2) {
+          // Failed
+          newCard.lapses += 1;
+          newCard.repetitions = 0;
+          newCard.interval = 1;
+          newCard.ease = Math.max(1.3, newCard.ease - 0.2);
+        } else {
+          // Passed
+          const easeDelta = quality === 3 ? 0.15 : (quality === 2 ? 0 : -0.15);
+          newCard.ease = Math.max(1.3, newCard.ease + easeDelta);
+
+          if (newCard.repetitions === 0) {
+            newCard.interval = 1;
+          } else if (newCard.repetitions === 1) {
+            newCard.interval = 6;
+          } else {
+            newCard.interval = Math.round(newCard.interval * newCard.ease);
+          }
+          newCard.repetitions += 1;
+        }
+
+        // Cap interval at 365 days
+        newCard.interval = Math.min(365, Math.max(1, newCard.interval));
+        newCard.dueDate = Date.now() + newCard.interval * 86400000;
+        return newCard;
+      }
+    }
+
+    // ============================================================
+    // APP STATE
+    // ============================================================
+    const STATE_KEY = 'oto_flashcards_state';
+    const CHAPTER_KEY = 'oto_flashcards_chapters';
+
+    let appState = {
+      darkMode: false,
+      newCardsPerDay: 30,
+      reviewsPerDay: 150,
+      cards: {}, // key: "chId-qNum" -> SM2 card data
+    };
+
+    let chapterState = {}; // key: chId -> { learned: [qNumbers], ... }
+
+    let allQuestions = [];
+    let currentSession = {
+      cards: [],
+      index: 0,
+      chapterId: null,
+      results: [],
+      isComplete: false,
+      showingAnswer: false,
+    };
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+    function init() {
+      // Build flat list
+      allQuestions = [];
+      FLASHCARD_DATA.chapters.forEach(ch => {
+        ch.questions.forEach(q => {
+          allQuestions.push({ ...q, chapterId: ch.id, chapterTitle: ch.title });
+        });
+      });
+
+      loadState();
+      renderHome();
+      renderStats();
+      bindEvents();
+      updateStatsBar();
+    }
+
+    // ============================================================
+    // STATE PERSISTENCE
+    // ============================================================
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STATE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          appState = { ...appState, ...parsed };
+        }
+        const chSaved = localStorage.getItem(CHAPTER_KEY);
+        if (chSaved) {
+          chapterState = JSON.parse(chSaved);
+        }
+      } catch (e) { console.warn('Load state error:', e); }
+      applyTheme();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STATE_KEY, JSON.stringify(appState));
+        localStorage.setItem(CHAPTER_KEY, JSON.stringify(chapterState));
+      } catch (e) { console.warn('Save state error:', e); }
+    }
+
+    function getCardKey(q) {
+      return `${q.chapterId}-${q.number}`;
+    }
+
+    function getCard(q) {
+      const key = getCardKey(q);
+      if (!appState.cards[key]) {
+        appState.cards[key] = SM2.getDefaultCard();
+      }
+      return appState.cards[key];
+    }
+
+    function isCardNew(q) {
+      const card = appState.cards[getCardKey(q)];
+      return !card || card.repetitions === 0;
+    }
+
+    function isCardDue(q) {
+      const card = appState.cards[getCardKey(q)];
+      return !card || card.dueDate <= Date.now();
+    }
+
+    function updateCard(q, quality) {
+      const key = getCardKey(q);
+      if (!appState.cards[key]) {
+        appState.cards[key] = SM2.getDefaultCard();
+      }
+      appState.cards[key] = SM2.schedule(appState.cards[key], quality);
+      saveState();
+    }
+
+    function getDueCards(chapterId) {
+      let cards = allQuestions;
+      if (chapterId) {
+        cards = cards.filter(q => q.chapterId === chapterId);
+      }
+      return cards.filter(q => isCardDue(q));
+    }
+
+    function getNewCards(chapterId) {
+      let cards = allQuestions;
+      if (chapterId) {
+        cards = cards.filter(q => q.chapterId === chapterId);
+      }
+      return cards.filter(q => isCardNew(q));
+    }
+
+    function getStudiedCount() {
+      return Object.values(appState.cards).filter(c => c.repetitions > 0).length;
+    }
+
+    function getDueCount(chapterId) {
+      return getDueCards(chapterId).length;
+    }
+
+    function getNewCount(chapterId) {
+      return getNewCards(chapterId).length;
+    }
+
+    function getMatureCount() {
+      return Object.values(appState.cards).filter(c => c.repetitions >= 3 && c.interval >= 21).length;
+    }
+
+    function getChapterStats(chId) {
+      const chQuestions = allQuestions.filter(q => q.chapterId === chId);
+      const total = chQuestions.length;
+      const studied = chQuestions.filter(q => !isCardNew(q)).length;
+      const due = chQuestions.filter(q => isCardDue(q) && !isCardNew(q)).length;
+      const newc = chQuestions.filter(q => isCardNew(q)).length;
+      return { total, studied, due, new: newc };
+    }
+
+    // ============================================================
+    // THEME
+    // ============================================================
+    function applyTheme() {
+      if (appState.darkMode) {
+        document.body.classList.add('dark-mode');
+        document.querySelector('#themeToggle').textContent = '☀️';
+      } else {
+        document.body.classList.remove('dark-mode');
+        document.querySelector('#themeToggle').textContent = '🌙';
+      }
+      document.querySelector('#darkModeToggle').checked = appState.darkMode;
+    }
+
+    // ============================================================
+    // RENDER HOME
+    // ============================================================
+    function renderHome() {
+      const grid = document.querySelector('#chapterGrid');
+      grid.innerHTML = '';
+
+      FLASHCARD_DATA.chapters.forEach(ch => {
+        const stats = getChapterStats(ch.id);
+        const pct = stats.total > 0 ? Math.round((stats.studied / stats.total) * 100) : 0;
+        let badge = `<span class="badge">${stats.new} new</span>`;
+        if (stats.due > 0) badge = `<span class="badge due">${stats.due} due</span>`;
+        if (stats.studied === stats.total) badge = `<span class="badge done">✅ Done</span>`;
+
+        const card = document.createElement('div');
+        card.className = 'chapter-card';
+        card.dataset.chapterId = ch.id;
+        card.innerHTML = `
+          <div class="info">
+            <div class="title">${ch.id}. ${ch.title}</div>
+            <div class="subtitle">${stats.total} cards • ${pct}% complete</div>
+          </div>
+          ${badge}
+        `;
+        card.addEventListener('click', () => startChapterStudy(ch.id));
+        grid.appendChild(card);
+      });
+
+      updateStatsBar();
+    }
+
+    function updateStatsBar() {
+      const total = allQuestions.length;
+      const studied = getStudiedCount();
+      const due = getDueCount();
+      document.querySelector('#statTotal').textContent = total;
+      document.querySelector('#statStudied').textContent = studied;
+      document.querySelector('#statDue').textContent = due;
+    }
+
+    // ============================================================
+    // RENDER STATS
+    // ============================================================
+    function renderStats() {
+      const total = allQuestions.length;
+      const studied = getStudiedCount();
+      const due = getDueCount();
+      const newCards = allQuestions.filter(q => isCardNew(q)).length;
+      const mature = getMatureCount();
+
+      const cards = Object.values(appState.cards);
+      const avgEase = cards.length > 0
+        ? Math.round((cards.reduce((s, c) => s + c.ease, 0) / cards.length) * 100)
+        : 250;
+
+      document.querySelector('#sTotal').textContent = total;
+      document.querySelector('#sStudied').textContent = studied;
+      document.querySelector('#sNew').textContent = newCards;
+      document.querySelector('#sDue').textContent = due;
+      document.querySelector('#sMature').textContent = mature;
+      document.querySelector('#sEase').textContent = `${avgEase}%`;
+
+      // Chapter progress
+      const list = document.querySelector('#chapterProgressList');
+      list.innerHTML = '';
+      FLASHCARD_DATA.chapters.forEach(ch => {
+        const stats = getChapterStats(ch.id);
+        const pct = stats.total > 0 ? Math.round((stats.studied / stats.total) * 100) : 0;
+        const item = document.createElement('div');
+        item.className = 'chapter-progress-item';
+        item.innerHTML = `
+          <span class="cp-name">${ch.id}. ${ch.title}</span>
+          <div class="cp-bar"><div class="fill" style="width:${pct}%"></div></div>
+          <span class="cp-pct">${pct}%</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // ============================================================
+    // STUDY LOGIC
+    // ============================================================
+    function startChapterStudy(chapterId) {
+      // Gather cards: due cards first, then new cards (up to limit)
+      const dueCards = getDueCards(chapterId);
+      const newCards = getNewCards(chapterId).slice(0, appState.newCardsPerDay);
+      const maxReviews = appState.reviewsPerDay;
+
+      let sessionCards = [...dueCards];
+      if (sessionCards.length < maxReviews) {
+        const remaining = maxReviews - sessionCards.length;
+        sessionCards = sessionCards.concat(newCards.slice(0, remaining));
+      } else {
+        sessionCards = sessionCards.slice(0, maxReviews);
+      }
+
+      if (sessionCards.length === 0) {
+        showToast('🎉 All caught up! No cards due for review.');
+        return;
+      }
+
+      // Shuffle the session cards
+      sessionCards = shuffleArray(sessionCards);
+
+      currentSession = {
+        cards: sessionCards,
+        index: 0,
+        chapterId: chapterId,
+        results: [],
+        isComplete: false,
+        showingAnswer: false,
+      };
+
+      switchScreen('study');
+      showCard();
+    }
+
+    function startStudyAll() {
+      const dueCards = getDueCards();
+      const newCards = getNewCards().slice(0, appState.newCardsPerDay);
+      let sessionCards = [...dueCards];
+      if (sessionCards.length < appState.reviewsPerDay) {
+        const remaining = appState.reviewsPerDay - sessionCards.length;
+        sessionCards = sessionCards.concat(newCards.slice(0, remaining));
+      } else {
+        sessionCards = sessionCards.slice(0, appState.reviewsPerDay);
+      }
+
+      if (sessionCards.length === 0) {
+        showToast('🎉 All caught up! No cards due for review.');
+        return;
+      }
+
+      sessionCards = shuffleArray(sessionCards);
+
+      currentSession = {
+        cards: sessionCards,
+        index: 0,
+        chapterId: null,
+        results: [],
+        isComplete: false,
+        showingAnswer: false,
+      };
+
+      switchScreen('study');
+      showCard();
+    }
+
+    function startNewCards() {
+      const newCards = getNewCards().slice(0, appState.newCardsPerDay);
+      if (newCards.length === 0) {
+        showToast('🎉 No new cards available!');
+        return;
+      }
+
+      newCards.sort(() => Math.random() - 0.5);
+
+      currentSession = {
+        cards: newCards,
+        index: 0,
+        chapterId: null,
+        results: [],
+        isComplete: false,
+        showingAnswer: false,
+      };
+
+      switchScreen('study');
+      showCard();
+    }
+
+    function showCard() {
+      const session = currentSession;
+      if (session.index >= session.cards.length) {
+        finishSession();
+        return;
+      }
+
+      const q = session.cards[session.index];
+      const chTitle = FLASHCARD_DATA.chapters.find(c => c.id === q.chapterId)?.title || '';
+
+      document.querySelector('#studyChapterTitle').textContent = `${q.chapterId}. ${chTitle}`;
+      document.querySelector('#studyProgress').textContent = `${session.index + 1} / ${session.cards.length}`;
+      document.querySelector('#studyProgressFill').style.width = `${((session.index + 1) / session.cards.length) * 100}%`;
+
+      document.querySelector('#questionText').textContent = q.question;
+      document.querySelector('#answerText').innerHTML = formatAnswer(q.answer);
+      document.querySelector('#answerText').style.display = 'none';
+      document.querySelector('#ratingArea').style.display = 'none';
+      document.querySelector('#reviewComplete').style.display = 'none';
+      document.querySelector('#cardLabel').textContent = 'Question';
+      document.querySelector('#tapHint').style.display = 'block';
+      session.showingAnswer = false;
+
+      document.querySelector('#flashcard').classList.remove('shake');
+    }
+
+    function formatAnswer(text) {
+      // Format bullet points and line breaks
+      let html = text;
+      // Replace ● with proper bullet
+      html = html.replace(/●/g, '•');
+      // Replace multiple spaces
+      html = html.replace(/\s+/g, ' ');
+      // Handle numbered lists
+      html = html.replace(/(\d+\.\s)/g, '<br>$1');
+      return html;
+    }
+
+    function showAnswer() {
+      const session = currentSession;
+      if (session.index >= session.cards.length) return;
+
+      const q = session.cards[session.index];
+
+      document.querySelector('#questionText').textContent = q.question;
+      document.querySelector('#answerText').innerHTML = formatAnswer(q.answer);
+      document.querySelector('#answerText').style.display = 'block';
+      document.querySelector('#ratingArea').style.display = 'block';
+      document.querySelector('#tapHint').style.display = 'none';
+      document.querySelector('#cardLabel').textContent = 'Answer';
+      session.showingAnswer = true;
+    }
+
+    function rateCard(quality) {
+      const session = currentSession;
+      if (session.index >= session.cards.length || !session.showingAnswer) return;
+
+      const q = session.cards[session.index];
+      updateCard(q, quality);
+
+      session.results.push({ cardId: getCardKey(q), quality, question: q.question });
+      session.index++;
+
+      // Small delay for animation
+      setTimeout(() => showCard(), 150);
+    }
+
+    function finishSession() {
+      currentSession.isComplete = true;
+      const results = currentSession.results;
+      const total = results.length;
+      const again = results.filter(r => r.quality === 0).length;
+      const hard = results.filter(r => r.quality === 1).length;
+      const good = results.filter(r => r.quality === 2).length;
+      const easy = results.filter(r => r.quality === 3).length;
+      const recall = good + easy;
+      const pct = total > 0 ? Math.round((recall / total) * 100) : 0;
+
+      document.querySelector('#reviewComplete').style.display = 'block';
+      document.querySelector('#ratingArea').style.display = 'none';
+      document.querySelector('#flashcard').style.display = 'none';
+      document.querySelector('#studyProgress').textContent = `${total} / ${total}`;
+      document.querySelector('#studyProgressFill').style.width = '100%';
+
+      document.querySelector('#sessionSummary').textContent =
+        `You reviewed ${total} cards in this session. Recall rate: ${pct}%`;
+      document.querySelector('#sessionAgain').textContent = again;
+      document.querySelector('#sessionHard').textContent = hard;
+      document.querySelector('#sessionGood').textContent = good;
+      document.querySelector('#sessionEasy').textContent = easy;
+      document.querySelector('#sessionTotal').textContent = total;
+      document.querySelector('#sessionPct').textContent = `${pct}%`;
+
+      updateStatsBar();
+      renderHome();
+      renderStats();
+    }
+
+    // ============================================================
+    // SEARCH
+    // ============================================================
+    function performSearch(query) {
+      const grid = document.querySelector('#chapterGrid');
+      const q = query.toLowerCase().trim();
+
+      if (!q) {
+        renderHome();
+        return;
+      }
+
+      // Search all questions
+      const results = allQuestions.filter(item =>
+        item.question.toLowerCase().includes(q) ||
+        item.answer.toLowerCase().includes(q) ||
+        item.chapterTitle.toLowerCase().includes(q)
+      );
+
+      grid.innerHTML = '';
+      if (results.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><div class="emoji">🔍</div><p>No flashcards found for your search.</p></div>';
+        return;
+      }
+
+      // Show results grouped by chapter
+      const grouped = {};
+      results.forEach(r => {
+        if (!grouped[r.chapterId]) grouped[r.chapterId] = [];
+        grouped[r.chapterId].push(r);
+      });
+
+      Object.keys(grouped).forEach(chId => {
+        const ch = FLASHCARD_DATA.chapters.find(c => c.id === parseInt(chId));
+        if (!ch) return;
+        const title = document.createElement('div');
+        title.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-2);padding:8px 4px;';
+        title.textContent = `${ch.id}. ${ch.title} (${grouped[chId].length} matches)`;
+        grid.appendChild(title);
+
+        grouped[chId].slice(0, 5).forEach(q => {
+          const card = document.createElement('div');
+          card.className = 'chapter-card';
+          card.innerHTML = `
+            <div class="info">
+              <div class="subtitle" style="font-size:11px;">Q${q.number}</div>
+              <div class="title" style="font-size:13px;">${highlightMatch(q.question, q)}</div>
+            </div>
+          `;
+          card.addEventListener('click', () => {
+            startChapterStudy(q.chapterId);
+          });
+          grid.appendChild(card);
+        });
+
+        if (grouped[chId].length > 5) {
+          const more = document.createElement('div');
+          more.style.cssText = 'font-size:12px;color:var(--text-2);padding:4px 4px 12px;';
+          more.textContent = `+${grouped[chId].length - 5} more matches`;
+          grid.appendChild(more);
+        }
+      });
+    }
+
+    function highlightMatch(text, q) {
+      return text.length > 100 ? text.substring(0, 100) + '...' : text;
+    }
+
+    // ============================================================
+    // UI HELPERS
+    // ============================================================
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelector(`#screen-${screenId}`).classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+      const tab = document.querySelector(`.tab-btn[data-tab="${screenId}"]`);
+      if (tab) tab.classList.add('active');
+
+      if (screenId === 'stats') renderStats();
+      if (screenId === 'home') { renderHome(); updateStatsBar(); }
+
+      // Reset study view if navigating away
+      if (screenId !== 'study') {
+        document.querySelector('#reviewComplete').style.display = 'none';
+        document.querySelector('#flashcard').style.display = 'flex';
+        document.querySelector('#ratingArea').style.display = 'none';
+      }
+    }
+
+    function showToast(msg) {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    }
+
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // ============================================================
+    // BIND EVENTS
+    // ============================================================
+    function bindEvents() {
+      // Tab navigation
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchScreen(btn.dataset.tab);
+        });
+      });
+
+      // Theme
+      document.querySelector('#themeToggle').addEventListener('click', () => {
+        appState.darkMode = !appState.darkMode;
+        applyTheme();
+        saveState();
+      });
+      document.querySelector('#darkModeToggle').addEventListener('change', (e) => {
+        appState.darkMode = e.target.checked;
+        applyTheme();
+        saveState();
+      });
+
+      // Flashcard tap
+      document.querySelector('#flashcard').addEventListener('click', () => {
+        if (!currentSession.showingAnswer && !currentSession.isComplete) {
+          showAnswer();
+        }
+      });
+
+      // Rating buttons
+      document.querySelectorAll('.rating-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          rateCard(parseInt(btn.dataset.rating));
+        });
+      });
+
+      // Quick actions
+      document.querySelector('#studyAllBtn').addEventListener('click', startStudyAll);
+      document.querySelector('#studyNewBtn').addEventListener('click', startNewCards);
+
+      // Session complete buttons
+      document.querySelector('#continueBtn').addEventListener('click', () => {
+        // Start a new session with remaining due cards
+        if (currentSession.chapterId) {
+          startChapterStudy(currentSession.chapterId);
+        } else {
+          startStudyAll();
+        }
+      });
+      document.querySelector('#doneBtn').addEventListener('click', () => {
+        document.querySelector('#reviewComplete').style.display = 'none';
+        document.querySelector('#flashcard').style.display = 'flex';
+        switchScreen('home');
+      });
+
+      // Search
+      let searchTimeout;
+      document.querySelector('#searchInput').addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => performSearch(e.target.value), 300);
+      });
+      document.querySelector('#searchToggle').addEventListener('click', () => {
+        const input = document.querySelector('#searchInput');
+        input.focus();
+        input.scrollIntoView({ behavior: 'smooth' });
+      });
+
+      // Settings
+      document.querySelector('#newCardsPerDay').addEventListener('change', (e) => {
+        appState.newCardsPerDay = parseInt(e.target.value);
+        saveState();
+      });
+      document.querySelector('#reviewsPerDay').addEventListener('change', (e) => {
+        appState.reviewsPerDay = parseInt(e.target.value);
+        saveState();
+      });
+
+      // Reset
+      document.querySelector('#resetProgress').addEventListener('click', () => {
+        if (confirm('Are you sure you want to delete ALL study progress? This cannot be undone.')) {
+          if (confirm('Really? All your progress will be lost.')) {
+            appState.cards = {};
+            chapterState = {};
+            saveState();
+            renderHome();
+            renderStats();
+            updateStatsBar();
+            showToast('🗑️ All progress has been reset.');
+          }
+        }
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (document.querySelector('#screen-study').classList.contains('active')) {
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            if (!currentSession.showingAnswer && !currentSession.isComplete) {
+              showAnswer();
+            }
+          }
+          if (currentSession.showingAnswer) {
+            if (e.key === '1') rateCard(0);
+            else if (e.key === '2') rateCard(1);
+            else if (e.key === '3') rateCard(2);
+            else if (e.key === '4') rateCard(3);
+          }
+        }
+      });
+
+      // Load saved settings
+      document.querySelector('#newCardsPerDay').value = appState.newCardsPerDay;
+      document.querySelector('#reviewsPerDay').value = appState.reviewsPerDay;
+    }
+
+    // ============================================================
+    // SERVICE WORKER REGISTRATION
+    // ============================================================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').then(reg => {
+          console.log('SW registered:', reg.scope);
+        }).catch(err => {
+          console.warn('SW registration failed:', err);
+        });
+      });
+    }
+
+    // ============================================================
+    // START
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

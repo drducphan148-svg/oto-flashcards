@@ -1,0 +1,24 @@
+{
+  "name": "OTO Flashcards - Otolaryngology Board Review",
+  "short_name": "OTO Cards",
+  "description": "Otolaryngology Head & Neck Surgery flashcard review with spaced repetition",
+  "start_url": "index.html",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#f0f2f5",
+  "theme_color": "#1a1a2e",
+  "scope": ".",
+  "id": "oto-flashcards",
+  "categories": ["medical", "education", "reference"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%231a1a2e'/%3E%3Ctext x='96' y='140' font-size='120' text-anchor='middle' fill='%23fff' font-family='serif'%3E📖%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

@@ -14,10 +14,13 @@ An interactive flashcard app for **Otolaryngology–Head and Neck Surgery: Rapid
 - ✅ **Study statistics** to track your progress
 - ✅ **Keyboard shortcuts** (Space/Enter to reveal, 1-4 to rate)
 
+## 🌐 Live App
+**https://drducphan148-svg.github.io/oto-flashcards/**
+
 ## Quick Start
 
 ### Option 1: Use directly (no install needed)
-Open `index.html` in any modern browser.
+Open **[https://drducphan148-svg.github.io/oto-flashcards/](https://drducphan148-svg.github.io/oto-flashcards/)** in any browser.
 
 ### Option 2: Install as PWA (recommended for iPhone/iPad/Mac)
 
